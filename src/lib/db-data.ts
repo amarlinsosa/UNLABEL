@@ -88,6 +88,9 @@ export async function getPoliticiansFromDb(): Promise<Politician[]> {
         office: row.office,
         avatarUrl: row.avatar_slug,
         realPhotoUrl: row.real_photo_url,
+        // SOURCE OF TRUTH: The detailed politician bio comes directly from
+        // the `politicians.long_description` column in the MySQL RDS database.
+        // Keep this mapping here so the UI reads the DB value at runtime.
         longDescription: row.long_description,
         website: row.website ?? "",
         scores: emptyScores,

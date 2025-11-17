@@ -12,6 +12,10 @@ import { groupBy } from "lodash";
 import ResultsClient from "./ResultsClient";
 import BackToTopButton from "@/components/app/BackToTopButton";
 
+// Force this route to be dynamically server-rendered so DB updates
+// (e.g. changes to `politicians.long_description`) appear immediately
+// on the live site without requiring a rebuild.
+export const dynamic = "force-dynamic";
 const officeOrder = [
     // State Executive
     "Governor of Alabama",
