@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { PolicyScores, PoliticianResult } from "@/lib/types";
 import { calculateMatchPercentage, unslugify, getUserScoresFromURL } from "@/lib/utils";
 import { getPoliticiansFromDb, getQuestionsFromDb, getPlaceholderImagesFromDb } from "@/lib/db-data";
+import { getShortDescription } from '@/lib/politician-descriptions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, Terminal } from "lucide-react";
 import PoliticianCard from "@/components/app/PoliticianCard";
@@ -28,7 +29,7 @@ async function OfficeResults({ officePoliticians, userScores }: { officePolitici
     .map((politician) => ({
       politician,
       matchPercentage: calculateMatchPercentage(userScores, politician),
-      rpgDescription: "Character profile generation is currently disabled."
+      rpgDescription: getShortDescription(politician.name)
     }))
     .sort((a, b) => b.matchPercentage - a.matchPercentage);
 
