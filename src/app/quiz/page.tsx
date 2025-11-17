@@ -1,11 +1,13 @@
 
-import { questions } from "@/lib/data";
 import QuizClient from "./QuizClient";
+import { getQuestionsFromDb } from "@/lib/db-data";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-export default function QuizPage() {
+export default async function QuizPage() {
+  const questions = await getQuestionsFromDb();
+
   return (
     <div className="container mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center p-4">
       <div className="w-full self-start">

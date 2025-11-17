@@ -1,9 +1,9 @@
 
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import type { PolicyScores, UserAnswers, Politician } from "./types";
+import type { PolicyScores, UserAnswers, Politician, Question } from "./types";
 import { policyCategories } from "./types";
-import { questions } from "./data";
+// NOTE: no import from ./data - questions must be passed in from DB
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -68,7 +68,10 @@ export function unslugify(slug: string): string {
  * @param answers - A record of question IDs to user scores (1-5).
  * @returns A record of policy categories to scores (0-100).
  */
-export function calculateUserPolicyScores(answers: UserAnswers): PolicyScores {
+export function calculateUserPolicyScores(
+  answers: UserAnswers,
+  questions: Question[]
+): PolicyScores {
   const userScores: PolicyScores = {} as PolicyScores;
 
   for (const category of policyCategories) {
@@ -86,7 +89,9 @@ export function calculateUserPolicyScores(answers: UserAnswers): PolicyScores {
       return q.isInverted ? 100 - rawScore : rawScore;
     });
 
-    const averageScore = categoryScores.reduce((sum, score) => sum + score, 0) / categoryScores.length;
+    const averageScore =
+      categoryScores.reduce((sum, score) => sum + score, 0) /
+      categoryScores.length;
     userScores[category] = averageScore;
   }
 
@@ -123,27 +128,40 @@ export function calculateMatchPercentage(
  * @param answersParam - The URL query parameter for answers.
  * @returns An object containing the user's scores or an error message.
  */
-export function getUserScoresFromURL(answersParam?: string): { userScores: PolicyScores | null; error: string | null } {
-    if (!answersParam) {
-        return { userScores: null, error: "No answers provided. Please take the quiz first." };
-    }
+export function getUserScoresFromURL(
+  answersParam: string | undefined,
+  questions: Question[]
+): { userScores: PolicyScores | null; error: string | null } {
+  if (!answersParam) {
+    return { userScores: null, error: "No answers provided." };
+  }
 
-    let answers: UserAnswers;
-    try {
-        answers = JSON.parse(decodeURIComponent(answersParam));
-        // Basic validation to ensure it's a non-empty object
-        if (typeof answers !== 'object' || answers === null || Object.keys(answers).length === 0) {
-            throw new Error("Invalid answers format.");
-        }
-    } catch (e) {
-        return { userScores: null, error: "Could not parse your answers. Please try the quiz again." };
+  let answers: UserAnswers;
+  try {
+    answers = JSON.parse(decodeURIComponent(answersParam));
+    if (
+      typeof answers !== "object" ||
+      answers === null ||
+      Object.keys(answers).length === 0
+    ) {
+      throw new Error("Invalid answers format.");
     }
+  } catch (e) {
+    return {
+      userScores: null,
+      error: "Could not parse your answers. Please try the quiz again.",
+    };
+  }
 
-    const userScores = calculateUserPolicyScores(answers);
+  const userScores = calculateUserPolicyScores(answers, questions);
 
-    if (Object.values(userScores).some(score => isNaN(score))) {
-        return { userScores: null, error: "There was an error calculating your scores. Please try the quiz again." };
-    }
-    
-    return { userScores, error: null };
+  if (Object.values(userScores).some((score) => isNaN(score))) {
+    return {
+      userScores: null,
+      error:
+        "There was an error calculating your scores. Please try the quiz again.",
+    };
+  }
+
+  return { userScores, error: null };
 }

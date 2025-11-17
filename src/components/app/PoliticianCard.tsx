@@ -8,7 +8,6 @@ import { policyCategories } from "@/lib/types";
 import AnimatedPolicyStat from "./AnimatedPolicyStat";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { ExternalLink, Info, RotateCcw } from "lucide-react";
@@ -45,12 +44,9 @@ export default function PoliticianCard({ politicianResult, userScores, rank, ani
   const { politician, rpgDescription } = politicianResult;
   const matchPercentage = isNaN(politicianResult.matchPercentage) ? 0 : politicianResult.matchPercentage;
   
-  const avatarImage = PlaceHolderImages.find(img => img.id === politician.avatarUrl) 
-    ?? PlaceHolderImages.find(img => img.id === 'placeholder-fallback');
-
   const realPhotoUrl = politician.realPhotoUrl;
-  const avatarUrl = avatarImage?.imageUrl ?? "https://picsum.photos/seed/placeholder/150/150";
-  const imageHint = avatarImage?.imageHint ?? "placeholder";
+  const avatarUrl = politician.avatarUrl || "https://picsum.photos/seed/placeholder/150/150";
+  const imageHint = "placeholder";
   
   const [isFlipped, setIsFlipped] = useState(false);
   const [isImageFlipped, setIsImageFlipped] = useState(false);

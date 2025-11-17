@@ -2,9 +2,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { politicians } from "@/lib/data";
 import type { PolicyScores, PoliticianResult, OfficeResult } from "@/lib/types";
 import { calculateMatchPercentage, getUserScoresFromURL } from "@/lib/utils";
+import { getPoliticiansFromDb, getQuestionsFromDb, getPlaceholderImagesFromDb } from "@/lib/db-data";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { HelpCircle, Terminal } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -50,7 +50,7 @@ interface ResultsPageProps {
  * @param {ResultsPageProps} props - The props for the component, containing search parameters.
  * @returns {JSX.Element} The rendered results page.
  */
-async function Results({ userScores }: { userScores: PolicyScores }) {
+async function Results({ userScores, politicians }: { userScores: PolicyScores, politicians: any[] }) {
   const allResults: PoliticianResult[] = politicians
     .map((politician) => ({
       politician,
@@ -74,8 +74,26 @@ async function Results({ userScores }: { userScores: PolicyScores }) {
 }
 
 
-export default function ResultsPage({ searchParams }: ResultsPageProps) {
-  const { userScores, error } = getUserScoresFromURL(searchParams.answers);
+export default async function ResultsPage({ searchParams }: ResultsPageProps) {
+  const [politiciansRaw, questions, placeholderImages] = await Promise.all([
+    getPoliticiansFromDb(),
+    getQuestionsFromDb(),
+    getPlaceholderImagesFromDb(),
+  ]);
+
+  // Resolve avatar slugs to actual image URLs where possible
+  const politicians = politiciansRaw.map((p) => {
+    const found = placeholderImages.find((img) => img.id === p.avatarUrl);
+    return {
+      ...p,
+      avatarUrl: found ? found.imageUrl : p.avatarUrl,
+    };
+  });
+
+  const { userScores, error } = getUserScoresFromURL(
+    searchParams.answers,
+    questions
+  );
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -103,7 +121,7 @@ export default function ResultsPage({ searchParams }: ResultsPageProps) {
             </div>
           ) : (
             <Suspense fallback={<div className="text-center">Calculating results...</div>}>
-              <Results userScores={userScores} />
+              <Results userScores={userScores} politicians={politicians} />
             </Suspense>
           )}
         </div>

@@ -2,9 +2,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { politicians } from "@/lib/data";
 import type { PolicyScores, PoliticianResult } from "@/lib/types";
 import { calculateMatchPercentage, unslugify, getUserScoresFromURL } from "@/lib/utils";
+import { getPoliticiansFromDb, getQuestionsFromDb, getPlaceholderImagesFromDb } from "@/lib/db-data";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ArrowLeft, Terminal } from "lucide-react";
 import PoliticianCard from "@/components/app/PoliticianCard";
@@ -19,10 +19,7 @@ interface OfficePageProps {
   };
 }
 
-async function OfficeResults({ office, userScores }: { office: string, userScores: PolicyScores }) {
-  const officeName = unslugify(office);
-  const officePoliticians = politicians.filter(p => p.office === officeName);
-
+async function OfficeResults({ officePoliticians, userScores }: { officePoliticians: any[], userScores: PolicyScores }) {
   if (officePoliticians.length === 0) {
     return <p className="text-center text-muted-foreground pt-8">There are no official candidates for this office yet.</p>;
   }
@@ -49,9 +46,25 @@ async function OfficeResults({ office, userScores }: { office: string, userScore
   );
 }
 
-export default function OfficePage({ params, searchParams }: OfficePageProps) {
-  const { userScores, error } = getUserScoresFromURL(searchParams.answers);
+export default async function OfficePage({ params, searchParams }: OfficePageProps) {
+  const [politiciansRaw, questions, placeholderImages] = await Promise.all([
+    getPoliticiansFromDb(),
+    getQuestionsFromDb(),
+    getPlaceholderImagesFromDb(),
+  ]);
+
+  const { userScores, error } = getUserScoresFromURL(searchParams.answers, questions);
   const officeName = unslugify(params.office);
+
+  const politicians = politiciansRaw.map((p) => {
+    const found = placeholderImages.find((img) => img.id === p.avatarUrl);
+    return {
+      ...p,
+      avatarUrl: found ? found.imageUrl : p.avatarUrl,
+    };
+  });
+
+  const officePoliticians = politicians.filter((p: any) => p.office === officeName);
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
@@ -91,7 +104,7 @@ export default function OfficePage({ params, searchParams }: OfficePageProps) {
           </div>
         ) : (
           <Suspense fallback={<div className="text-center pt-8">Calculating matches...</div>}>
-            <OfficeResults office={params.office} userScores={userScores} />
+            <OfficeResults officePoliticians={officePoliticians} userScores={userScores} />
           </Suspense>
         )}
       </div>
