@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # 1. Keep npm dependencies up to date (Next.js, React, TS, ShadCN, Tailwind)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      # Group related updates so you don't get spammed with PRs
+      nextjs:
+        patterns:
+          - "next*"
+      react:
+        patterns:
+          - "react*"
+      shadcn:
+        patterns:
+          - "@radix-ui*"
+          - "lucide-react"
+      tailwind:
+        patterns:
+          - "tailwind*"
+          - "@tailwind*"
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+
+  # 2. Keep GitHub Actions updated (important for security)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
