@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { PolicyScores, PoliticianResult, OfficeResult } from "@/lib/types";
 import { calculateMatchPercentage, getUserScoresFromURL } from "@/lib/utils";
 import { getPoliticiansFromDb, getQuestionsFromDb, getPlaceholderImagesFromDb } from "@/lib/db-data";
+import { getShortDescription } from '@/lib/politician-descriptions';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { HelpCircle, Terminal } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -59,7 +60,7 @@ async function Results({ userScores, politicians }: { userScores: PolicyScores, 
     .map((politician) => ({
       politician,
       matchPercentage: calculateMatchPercentage(userScores, politician),
-      rpgDescription: "Character profile generation is currently disabled."
+      rpgDescription: getShortDescription(politician.name)
     }))
     .sort((a, b) => b.matchPercentage - a.matchPercentage);
 
